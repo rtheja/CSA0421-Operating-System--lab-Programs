@@ -1,0 +1,119 @@
+input:
+#include <stdio.h>
+#include <stdlib.h>
+#include <Windows.h>
+
+#define NUM_PHILOSOPHERS 5
+#define NUM_CHOPSTICKS 5
+
+HANDLE chopsticks[NUM_CHOPSTICKS];
+HANDLE philosophers[NUM_PHILOSOPHERS];
+DWORD WINAPI philosopher(LPVOID id);
+
+int main() {
+    
+    for (int i = 0; i < NUM_CHOPSTICKS; i++) {
+        chopsticks[i] = CreateMutex(NULL, FALSE, NULL);
+    }
+
+    
+    for (int i = 0; i < NUM_PHILOSOPHERS; i++) {
+        DWORD id;
+        philosophers[i] = CreateThread(NULL, 0, philosopher, (LPVOID)i, 0, &id);
+    }
+
+    
+    WaitForMultipleObjects(NUM_PHILOSOPHERS, philosophers, TRUE, INFINITE);
+
+    
+    for (int i = 0; i < NUM_CHOPSTICKS; i++) {
+        CloseHandle(chopsticks[i]);
+    }
+
+    return 0;
+}
+
+DWORD WINAPI philosopher(LPVOID id) {
+    int philosopherId = (int)id;
+    int left = philosopherId;
+    int right = (philosopherId + 1) % NUM_PHILOSOPHERS;
+
+    while (1) {
+        printf("Philosopher %d is thinking.\n", philosopherId);
+        Sleep(rand() % 5000 + 1000); // Thinking
+
+        printf("Philosopher %d is hungry.\n", philosopherId);
+        
+        
+        WaitForSingleObject(chopsticks[left], INFINITE);
+        printf("Philosopher %d picked up left chopstick.\n", philosopherId);
+
+        
+        DWORD result = WaitForSingleObject(chopsticks[right], INFINITE);
+        if (result == WAIT_OBJECT_0) {
+            printf("Philosopher %d picked up right chopstick and is eating.\n", philosopherId);
+            Sleep(rand() % 3000 + 1000); // Eating
+            printf("Philosopher %d finished eating.\n", philosopherId);
+
+           
+            ReleaseMutex(chopsticks[left]);
+            ReleaseMutex(chopsticks[right]);
+        } else {
+            printf("Philosopher %d could not pick up right chopstick. Putting down left chopstick.\n", philosopherId);
+            ReleaseMutex(chopsticks[left]);
+        }
+    }
+
+    return 0;
+}
+output:
+Philosopher 0 is thinking.
+Philosopher 1 is thinking.
+Philosopher 4 is thinking.
+Philosopher 3 is thinking.
+Philosopher 2 is thinking.
+Philosopher 2 is hungry.
+Philosopher 3 is hungry.
+Philosopher 3 picked up left chopstick.
+Philosopher 3 picked up right chopstick and is eating.
+Philosopher 0 is hungry.
+Philosopher 0 picked up left chopstick.
+Philosopher 0 picked up right chopstick and is eating.
+Philosopher 1 is hungry.
+Philosopher 2 picked up left chopstick.
+Philosopher 4 is hungry.
+Philosopher 0 finished eating.
+Philosopher 0 is thinking.
+Philosopher 3 finished eating.
+Philosopher 1 picked up left chopstick.
+Philosopher 3 is thinking.
+Philosopher 2 picked up right chopstick and is eating.
+Philosopher 4 picked up left chopstick.
+Philosopher 4 picked up right chopstick and is eating.
+Philosopher 4 finished eating.
+Philosopher 4 is thinking.
+Philosopher 2 finished eating.
+Philosopher 2 is thinking.
+Philosopher 1 picked up right chopstick and is eating.
+Philosopher 0 is hungry.
+Philosopher 0 picked up left chopstick.
+Philosopher 3 is hungry.
+Philosopher 3 picked up left chopstick.
+Philosopher 3 picked up right chopstick and is eating.
+Philosopher 1 finished eating.
+Philosopher 1 is thinking.
+Philosopher 0 picked up right chopstick and is eating.
+Philosopher 2 is hungry.
+Philosopher 2 picked up left chopstick.
+Philosopher 4 is hungry.
+Philosopher 1 is hungry.
+Philosopher 3 finished eating.
+Philosopher 2 picked up right chopstick and is eating.
+Philosopher 4 picked up left chopstick.
+Philosopher 3 is thinking.
+Philosopher 0 finished eating.
+Philosopher 0 is thinking.
+Philosopher 1 picked up left chopstick.
+Philosopher 4 picked up right chopstick and is eating.
+Philosopher 2 finished eating.
+Philosopher 2 is thinking.
