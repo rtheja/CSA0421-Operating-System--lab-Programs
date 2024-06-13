@@ -1,0 +1,157 @@
+input:
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MEMORY_SIZE 1000
+#define MAX_PROCESSES 10
+
+typedef struct {
+    int process_id;
+    int size;
+    int start_address;
+} Process;
+
+void first_fit(int memory[], int size, Process processes[], int process_id);
+void best_fit(int memory[], int size, Process processes[], int process_id);
+void worst_fit(int memory[], int size, Process processes[], int process_id);
+void print_memory(int memory[]);
+
+int main() {
+    int memory[MEMORY_SIZE] = {0};
+    Process processes[MAX_PROCESSES];
+
+    int choice, process_id = 0, size;
+
+    while (1) {
+        printf("\nMemory Allocation Strategies\n");
+        printf("1. First Fit\n");
+        printf("2. Best Fit\n");
+        printf("3. Worst Fit\n");
+        printf("4. Print Memory\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter process size: ");
+                scanf("%d", &size);
+                first_fit(memory, size, processes, process_id++);
+                break;
+            case 2:
+                printf("Enter process size: ");
+                scanf("%d", &size);
+                best_fit(memory, size, processes, process_id++);
+                break;
+            case 3:
+                printf("Enter process size: ");
+                scanf("%d", &size);
+                worst_fit(memory, size, processes, process_id++);
+                break;
+            case 4:
+                print_memory(memory);
+                break;
+            case 5:
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+
+    return 0;
+}
+
+void first_fit(int memory[], int size, Process processes[], int process_id) {
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int free = 1;
+        for (int j = 0; j < size; j++) {
+            if (memory[i + j] != 0) {
+                free = 0;
+                break;
+            }
+        }
+        if (free) {
+            for (int j = 0; j < size; j++) {
+                memory[i + j] = process_id + 1;
+            }
+            processes[process_id].process_id = process_id + 1;
+            processes[process_id].size = size;
+            processes[process_id].start_address = i;
+            printf("Process %d allocated at address %d\n", process_id + 1, i);
+            return;
+        }
+    }
+    printf("Not enough memory to allocate process %d\n", process_id + 1);
+}
+
+void best_fit(int memory[], int size, Process processes[], int process_id) {
+    int best_index = -1, best_size = INT_MAX;
+
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int free = 1, j;
+        for (j = 0; j < size; j++) {
+            if (memory[i + j] != 0) {
+                free = 0;
+                break;
+            }
+        }
+        if (free && j < best_size) {
+            best_index = i;
+            best_size = j;
+        }
+    }
+
+    if (best_index != -1) {
+        for (int j = 0; j < size; j++) {
+            memory[best_index + j] = process_id + 1;
+        }
+        processes[process_id].process_id = process_id + 1;
+        processes[process_id].size = size;
+        processes[process_id].start_address = best_index;
+        printf("Process %d allocated at address %d\n", process_id + 1, best_index);
+    } else {
+        printf("Not enough memory to allocate process %d\n", process_id + 1);
+    }
+}
+
+void worst_fit(int memory[], int size, Process processes[], int process_id) {
+    int worst_index = -1, worst_size = 0;
+
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        int free = 1, j;
+        for (j = 0; j < size; j++) {
+            if (memory[i + j] != 0) {
+                free = 0;
+                break;
+            }
+        }
+        if (free && j > worst_size) {
+            worst_index = i;
+            worst_size = j;
+        }
+    }
+
+    if (worst_index != -1) {
+        for (int j = 0; j < size; j++) {
+            memory[worst_index + j] = process_id + 1;
+        }
+        processes[process_id].process_id = process_id + 1;
+        processes[process_id].size = size;
+        processes[process_id].start_address = worst_index;
+        printf("Process %d allocated at address %d\n", process_id + 1, worst_index);
+    } else {
+        printf("Not enough memory to allocate process %d\n", process_id + 1);
+    }
+}
+
+void print_memory(int memory[]) {
+    printf("Memory Layout:\n");
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        printf("%d ", memory[i]);
+        if ((i + 1) % 50 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
